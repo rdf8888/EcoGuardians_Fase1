@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Painel de Controle</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="js/config.js"></script>
     <script src="js/ai-agent.js" defer></script>
 </head>
@@ -16,10 +17,13 @@
 
     <div id="painel" style="display:none;">
         <h3>Painel de Controle 👨‍💻</h3>
-        <textarea id="chat" rows="5" cols="40" placeholder="Fale com o agente..."></textarea><br/>
+        <textarea id="chat" rows="4" cols="40" placeholder="Fale com o agente..."></textarea><br/>
         <button onclick="enviarPerguntaIA()">Enviar</button><br/><br/>
         <button onclick="criarAgente()">Criar Novo Agente 🤖</button>
         <div id="resposta"></div>
+        <hr/>
+        <h4>🧠 Histórico</h4>
+        <div id="historico"></div>
     </div>
 </body>
 </html>
