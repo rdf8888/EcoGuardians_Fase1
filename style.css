@@ -1,15 +1,65 @@
-style.css
+
 body {
-  font-family: Arial, sans-serif;
-  background-color: #0b3d0b;
-  color: white;
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f1f3f4;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
   text-align: center;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  width: 90%;
+  max-width: 600px;
 }
-form {
-  margin-top: 20px;
+
+.slogan {
+  color: #555;
+  margin-top: -10px;
+  margin-bottom: 20px;
 }
-input, button {
-  margin: 5px;
+
+.chat-box {
+  height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
   padding: 10px;
+  margin-bottom: 10px;
+  background-color: #fafafa;
+  text-align: left;
 }
-style.css
+
+.chat-box p {
+  margin: 8px 0;
+}
+
+form {
+  display: flex;
+  gap: 10px;
+}
+
+input[type="text"] {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  padding: 10px 20px;
+  border: none;
+  background: #4285f4;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #3367d6;
+}
