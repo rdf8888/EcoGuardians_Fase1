@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Painel de Controle</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/config.js"></script>
     <script src="js/ai-agent.js" defer></script>
 </head>
 <body>
@@ -16,7 +17,7 @@
     <div id="painel" style="display:none;">
         <h3>Painel de Controle 👨‍💻</h3>
         <textarea id="chat" rows="5" cols="40" placeholder="Fale com o agente..."></textarea><br/>
-        <button onclick="enviarMensagem()">Enviar</button><br/><br/>
+        <button onclick="enviarPerguntaIA()">Enviar</button><br/><br/>
         <button onclick="criarAgente()">Criar Novo Agente 🤖</button>
         <div id="resposta"></div>
     </div>

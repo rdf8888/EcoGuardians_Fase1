@@ -1,0 +1,2 @@
+
+const GEMINI_API_KEY = "AIzaSyCdXfHDTXTbkTnV0FLZKsb5JhNmYFKJX-Y";
