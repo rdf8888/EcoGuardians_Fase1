@@ -1,29 +1,41 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Painel de Controle</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/ai-agent.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Agente IA</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/firebase-config.js"></script>
 </head>
 <body>
-    <h2>Login</h2>
-    <input id="user" placeholder="Usuário" /><br/>
-    <input id="pass" type="password" placeholder="Senha" /><br/>
-    <button onclick="login()">Entrar</button>
+  <h1>Painel do Agente IA</h1>
+  <textarea id="input" placeholder="Digite sua mensagem..."></textarea>
+  <button onclick="sendMessage()">Enviar</button>
+  <ul id="messages"></ul>
 
-    <div id="painel" style="display:none;">
-        <h3>Painel de Controle 👨‍💻</h3>
-        <textarea id="chat" rows="4" cols="40" placeholder="Fale com o agente..."></textarea><br/>
-        <button onclick="enviarPerguntaIA()">Enviar</button><br/><br/>
-        <button onclick="criarAgente()">Criar Novo Agente 🤖</button>
-        <div id="resposta"></div>
-        <hr/>
-        <h4>🧠 Histórico</h4>
-        <div id="historico"></div>
-    </div>
+  <script type="module">
+    import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+    import { app } from './js/firebase-config.js';
+    const db = getDatabase(app);
+    const messagesRef = ref(db, "conversas");
+
+    function sendMessage() {
+      const input = document.getElementById("input");
+      if (input.value.trim() !== "") {
+        push(messagesRef, { texto: input.value, timestamp: Date.now() });
+        input.value = "";
+      }
+    }
+
+    onValue(messagesRef, (snapshot) => {
+      const messages = document.getElementById("messages");
+      messages.innerHTML = "";
+      snapshot.forEach(child => {
+        const li = document.createElement("li");
+        li.innerText = child.val().texto;
+        messages.appendChild(li);
+      });
+    });
+  </script>
 </body>
 </html>
