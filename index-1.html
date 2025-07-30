@@ -1,13 +1,27 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EcoGuardians</title>
-  <link rel="stylesheet" href="css/style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EcoGuardians - Início</title>
+    <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <h1>EcoGuardians: Início</h1>
-  <p><a href="dashboard.html">Acessar Painel de Controle</a></p>
+    <h1>EcoGuardians: Início</h1>
+    <p><a href="dashboard.html">Acessar Painel de Controle</a></p>
+
+    <section class="chat-section">
+        <h3>Converse com seu Agente IA</h3>
+        <div id="chat-messages" class="chat-messages">
+            </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Digite sua mensagem...">
+            <button id="send-button">Enviar</button>
+        </div>
+    </section>
+    <script src="chat.js"></script> 
 </body>
 </html>
+
+
