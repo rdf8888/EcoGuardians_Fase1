@@ -1,0 +1,26 @@
+graph TD
+    A[PRESIDENTE: Rodolfo Barbosa] -- Comanda e Dirige --> B(AGENTE DE COMANDO PRINCIPAL: CEO Barbosa Nexus - IA)
+    B -- Coordenador Estratégico --> C(VP1: Thalles)
+    B -- Coordenador Estratégico --> D(VP2: Théo)
+    B -- Coordena e Reporta a --> E(CFO: Cotex Barbosa - IA)
+    E -- Lidera e Gerencia --> F(DEPARTAMENTO FINANCEIRO: Lord Barbosa - IA)
+
+    A --- Privilégios Exclusivos --> B
+    A --- Privilégios Exclusivos --> C
+    A --- Privilégios Exclusivos --> D
+
+    E -- Aceita Sugestões de --> C
+    E -- Aceita Sugestões de --> D
+    E -- Reporta Diretamente a --> A
+
+    subgraph Agentes de IA
+        B
+        E
+        F
+    end
+
+    subgraph Plano de Sucessão
+        A -- Ausência/Incapacidade --> G{Presidência: Thalles OU Théo}
+        G -- Escolha Baseada em Mérito por --> H(Agentes de Comando: CEO, CFO, Dept. Financeiro)
+        H -- Em Conjunto com --> A
+    end
