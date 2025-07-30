@@ -1,4 +1,4 @@
-/* Conteúdo consolidado de estilo.css, estilo-1.css, estilo-2.css */
+/* Conteúdo consolidado de estilo.css e outras versões anteriores */
 
 body {
     font-family: Arial, sans-serif;
@@ -8,11 +8,58 @@ body {
     color: #333;
 }
 
-.cabecalho-principal { /* Antes era .cabeçalho-principal, corrigido para .cabecalho-principal */
-    background-color: #28a745;
+/* Corrija as classes de acordo com as alterações no HTML (ex: de .cabeçalho-principal para .cabecalho-principal) */
+.cabecalho-principal {
+    background-color: #28a745; /* Exemplo de cor verde */
     color: white;
     padding: 20px;
     text-align: center;
 }
 
-/* ... e todo o restante do seu CSS aqui ... */
+.slogan {
+    font-style: italic;
+}
+
+.secao-introducao {
+    padding: 20px;
+    text-align: center;
+}
+
+.secao-introducao img { /* Estilo para a imagem dentro da seção de introdução */
+    max-width: 150px; /* Ajuste o tamanho conforme necessário */
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.navegacao-principal ul {
+    list-style: none;
+    padding: 0;
+    display: flex; /* Para alinhar os links lado a lado */
+    justify-content: center;
+    background-color: #333;
+}
+
+.navegacao-principal li a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 15px 20px;
+    transition: background-color 0.3s ease;
+}
+
+.navegacao-principal li a:hover {
+    background-color: #555;
+}
+
+.rodape-principal {
+    background-color: #333;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    margin-top: 20px; /* Para dar um espaço do conteúdo */
+}
+
+/* Adicione/Mantenha todos os seus outros estilos aqui */
