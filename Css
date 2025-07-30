@@ -1,0 +1,18 @@
+/* Conteúdo consolidado de estilo.css, estilo-1.css, estilo-2.css */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.cabecalho-principal { /* Antes era .cabeçalho-principal, corrigido para .cabecalho-principal */
+    background-color: #28a745;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+/* ... e todo o restante do seu CSS aqui ... */
