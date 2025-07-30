@@ -1,8 +1,179 @@
+/* estilo.css */
+
+/* Reset básico para consistência */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 body {
-  background-color: #f0f8f5;
-  font-family: Arial, sans-serif;
-  color: #2c3e50;
-  text-align: center;
-  padding-top: 50px;
+    font-family: 'Roboto', Arial, sans-serif; /* Fonte inspirada no Google */
+    background-color: #f8f9fa; /* Um cinza bem claro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Ocupa a altura total da viewport */
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Container principal para centralizar o chat */
+.chat-container {
+    background-color: #fff;
+    border-radius: 12px; /* Cantos mais arredondados */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* Sombra mais suave */
+    width: 90%;
+    max-width: 600px; /* Largura máxima para desktop */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Garante que os cantos arredondados funcionem */
+    position: relative; /* Para o link do dashboard */
+}
+
+/* Título do chat */
+h1 {
+    text-align: center;
+    color: #1a73e8; /* Azul do Google */
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 1.8em;
+}
+
+h3 {
+    text-align: center;
+    color: #5f6368; /* Cinza mais escuro para subtítulos */
+    padding: 15px 0;
+    font-size: 1.2em;
+    background-color: #f1f3f4;
+    border-bottom: 1px solid #eee;
+}
+
+/* Link para o dashboard - Posicionamento e estilo */
+.dashboard-link {
+    position: absolute;
+    top: 20px; /* Ajuste conforme necessário */
+    right: 20px; /* Ajuste conforme necessário */
+    font-size: 0.9em;
+    color: #1a73e8;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.dashboard-link:hover {
+    color: #0d47a1; /* Azul mais escuro no hover */
+}
+
+
+/* Área de mensagens do chat */
+.chat-messages {
+    flex-grow: 1; /* Ocupa o espaço restante */
+    padding: 20px;
+    overflow-y: auto; /* Scroll vertical se as mensagens excederem a altura */
+    max-height: 400px; /* Altura máxima para a área de mensagens */
+    background-color: #fdfdfd;
+}
+
+.message {
+    display: flex;
+    margin-bottom: 15px;
+    align-items: flex-end; /* Alinha o texto na parte inferior do balão */
+}
+
+.message span {
+    padding: 12px 18px;
+    border-radius: 20px;
+    max-width: 75%;
+    word-wrap: break-word; /* Quebra de linha para palavras longas */
+    font-size: 0.95em;
+    line-height: 1.4;
+}
+
+.message.user {
+    justify-content: flex-end;
+}
+
+.message.user span {
+    background-color: #e0f2f7; /* Azul claro para mensagens do usuário */
+    color: #333;
+    border-bottom-right-radius: 5px; /* Canto mais reto no lado do emissor */
+}
+
+.message.bot {
+    justify-content: flex-start;
+}
+
+.message.bot span {
+    background-color: #f1f1f1; /* Cinza claro para mensagens do bot */
+    color: #333;
+    border-bottom-left-radius: 5px; /* Canto mais reto no lado do emissor */
+}
+
+/* Área de entrada do chat */
+.chat-input {
+    display: flex;
+    padding: 20px;
+    border-top: 1px solid #eee;
+    background-color: #fdfdfd;
+    gap: 10px; /* Espaçamento entre input e botão */
+}
+
+.chat-input input[type="text"] {
+    flex-grow: 1;
+    padding: 12px 18px;
+    border: 1px solid #ddd;
+    border-radius: 25px; /* Input bem arredondado */
+    font-size: 1em;
+    outline: none; /* Remove o contorno azul ao focar */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chat-input input[type="text"]:focus {
+    border-color: #8ab4f8; /* Borda azul ao focar */
+    box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2); /* Sombra suave de foco */
+}
+
+.chat-input button {
+    background-color: #1a73e8; /* Azul do Google */
+    color: white;
+    border: none;
+    border-radius: 25px; /* Botão bem arredondado */
+    padding: 12px 25px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.chat-input button:hover {
+    background-color: #174ea6; /* Azul mais escuro no hover */
+    transform: translateY(-1px); /* Pequeno efeito de elevação */
+}
+
+.chat-input button:active {
+    transform: translateY(0); /* Retorna à posição normal ao clicar */
+}
+
+/* Mensagem de erro/alerta */
+.console-error { /* Se você quiser estilizar as mensagens de erro do JS no HTML */
+    color: #ea4335; /* Vermelho do Google */
+    text-align: center;
+    margin-top: 10px;
+    font-size: 0.9em;
+}
+
+/* Responsividade básica */
+@media (max-width: 768px) {
+    .chat-container {
+        width: 100%;
+        max-width: none;
+        height: 100vh; /* Ocupa a tela inteira em dispositivos menores */
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .chat-messages {
+        max-height: calc(100vh - 180px); /* Ajusta altura para caber header e input */
+    }
 }
