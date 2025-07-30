@@ -1,0 +1,4 @@
+body { font-family: Arial, sans-serif; background: #f5fff5; padding: 20px; }
+input, textarea { display: block; margin: 10px 0; width: 100%; max-width: 600px; }
+ul { list-style: none; padding: 0; }
+li { background: #d7f7d7; margin: 5px 0; padding: 10px; border-radius: 4px; }
