@@ -1,0 +1,52 @@
+import google.generativeai as genai
+import os
+from abc import ABC, abstractmethod
+import json
+
+# ====================================================================
+# Passo 1: Configuração da API do Google Gemini (Método para Smartphone)
+# ====================================================================
+def configurar_gemini():
+    """Solicita e configura a chave de API do Gemini."""
+    chave_api = input("Por favor, cole sua chave de API do Google Gemini aqui: ").strip()
+    if not chave_api:
+        print("Erro: A chave de API não pode ser vazia.")
+        return False
+    try:
+        genai.configure(api_key=chave_api)
+        # O modelo é configurado globalmente para ser usado por todos os agentes
+        global model
+        model = genai.GenerativeModel('gemini-pro')
+        print("Chave de API configurada com sucesso!")
+        return True
+    except Exception as e:
+        print(f"Erro ao configurar a API: {e}")
+        return False
+
+# ... (o restante das suas classes AgenteIA, CEONexus, etc.) ...
+
+# ====================================================================
+# Passo 4: Interface de Linha de Comando (CLI) para iniciar o agente
+# ====================================================================
+if __name__ == "__main__":
+    if not configurar_gemini():
+        print("Não foi possível configurar a API. Encerrando o programa.")
+    else:
+        agente_semente = AgenteSemente()
+        print("\nBem-vindo à interface de comando do Agente Semente EcoGuardians.")
+        
+        while True:
+            comando = input("\nDigite 'iniciar' para começar a auto-evolução, ou 'sair' para encerrar: ").lower()
+            if comando == 'iniciar':
+                try:
+                    num_ciclos_str = input("Quantos ciclos de auto-evolução você quer que ele execute? (padrão: 1) ")
+                    num_ciclos = int(num_ciclos_str) if num_ciclos_str.isdigit() else 1
+                    agente_semente.iniciar_ciclo_de_evolucao(ciclos=num_ciclos)
+                except ValueError:
+                    print("Entrada inválida. Por favor, digite um número inteiro.")
+            elif comando == 'sair':
+                print("Encerrando o programa. Até a próxima!")
+                break
+            else:
+                print("Comando inválido. Por favor, digite 'iniciar' ou 'sair'.")
+
