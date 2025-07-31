@@ -45,8 +45,13 @@ async function sendMessage() {
         if (!response.ok) {
             const errorData = await response.json();
             console.error('Erro da API Gemini:', errorData);
-            appendMessage('bot', 'Desculpe, houve um erro ao processar sua solicitação.');
-            return;
+            // --- INÍCIO DA MUDANÇA PARA DEPURAR NO CHAT ---
+            // Esta linha temporariamente exibe o erro completo da API no chat para ajudar na depuração.
+            // Lembre-se de remover ou comentar esta linha e voltar à mensagem original
+            // "Desculpe, houve um erro ao processar sua solicitação." após resolver o problema.
+            appendMessage('bot', 'ERRO API: ' + JSON.stringify(errorData));
+            // --- FIM DA MUDANÇA ---
+            return; // Retorna para evitar processar a resposta como sucesso
         }
 
         const data = await response.json();
