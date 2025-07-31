@@ -1,0 +1,29 @@
+# Supondo que você tenha uma função para chamar a API do Gemini
+def chamar_gemini(prompt):
+    # Lógica para chamar a API do Gemini aqui...
+    # Retorna a resposta da IA (ex: código Python gerado)
+    return "print('Código gerado pelo Gemini!')"
+
+class AgenteDesenvolvimento(AgenteIA):
+    def __init__(self):
+        super().__init__("Agente de Desenvolvimento", "Desenvolvimento de Código")
+
+    def executar_tarefa(self, descricao_tarefa: str):
+        print(f"Agente {self.nome} está recebendo a tarefa: '{descricao_tarefa}'")
+        
+        # Gera o prompt para a IA
+        prompt = f"Gere o código Python para a seguinte tarefa: {descricao_tarefa}"
+        
+        # Chama a IA para gerar o código
+        codigo_gerado = chamar_gemini(prompt)
+        
+        print(f"Código gerado pelo Gemini: \n{codigo_gerado}")
+
+# Exemplo de uso com IA
+if __name__ == "__main__":
+    ceo_nexus = CEONexus()
+    agente_dev_ia = AgenteDesenvolvimento()
+    ceo_nexus.adicionar_agente(agente_dev_ia)
+
+    # O CEO delega uma tarefa de forma mais inteligente
+    ceo_nexus.delegar_tarefa("Criar um sistema de login simples com autenticação OAuth", agente_dev_ia)
