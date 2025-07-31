@@ -1,52 +1,79 @@
+# api/autoelevacao.py
 import google.generativeai as genai
 import os
-from abc import ABC, abstractmethod
 import json
+from abc import ABC, abstractmethod
 
 # ====================================================================
-# Passo 1: Configuração da API do Google Gemini (Método para Smartphone)
+# Adaptação das classes para o contexto de uma API
 # ====================================================================
-def configurar_gemini():
-    """Solicita e configura a chave de API do Gemini."""
-    chave_api = input("Por favor, cole sua chave de API do Google Gemini aqui: ").strip()
-    if not chave_api:
-        print("Erro: A chave de API não pode ser vazia.")
-        return False
-    try:
-        genai.configure(api_key=chave_api)
-        # O modelo é configurado globalmente para ser usado por todos os agentes
-        global model
-        model = genai.GenerativeModel('gemini-pro')
-        print("Chave de API configurada com sucesso!")
-        return True
-    except Exception as e:
-        print(f"Erro ao configurar a API: {e}")
-        return False
 
-# ... (o restante das suas classes AgenteIA, CEONexus, etc.) ...
+# Suas classes de AgenteIA, CEONexus, etc. devem estar aqui ou em 'agentes.py'
+# Para este exemplo, vamos importá-las
+# from python.agentes import AgenteSemente, AgenteIA
+# Se estiverem no mesmo arquivo, você pode usá-las diretamente
 
 # ====================================================================
-# Passo 4: Interface de Linha de Comando (CLI) para iniciar o agente
+# Configuração da API para um ambiente de produção
 # ====================================================================
-if __name__ == "__main__":
-    if not configurar_gemini():
-        print("Não foi possível configurar a API. Encerrando o programa.")
-    else:
-        agente_semente = AgenteSemente()
-        print("\nBem-vindo à interface de comando do Agente Semente EcoGuardians.")
-        
-        while True:
-            comando = input("\nDigite 'iniciar' para começar a auto-evolução, ou 'sair' para encerrar: ").lower()
-            if comando == 'iniciar':
-                try:
-                    num_ciclos_str = input("Quantos ciclos de auto-evolução você quer que ele execute? (padrão: 1) ")
-                    num_ciclos = int(num_ciclos_str) if num_ciclos_str.isdigit() else 1
-                    agente_semente.iniciar_ciclo_de_evolucao(ciclos=num_ciclos)
-                except ValueError:
-                    print("Entrada inválida. Por favor, digite um número inteiro.")
-            elif comando == 'sair':
-                print("Encerrando o programa. Até a próxima!")
-                break
-            else:
-                print("Comando inválido. Por favor, digite 'iniciar' ou 'sair'.")
+try:
+    # A chave é lida de uma variável de ambiente, não de input()
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+    model = genai.GenerativeModel('gemini-pro')
+except Exception as e:
+    # Se a chave não estiver configurada, isso causará um erro 500 no servidor
+    model = None
+    print(f"Erro ao configurar a API: {e}")
 
+def handler(request):
+    """
+    Função principal que a Vercel executa para lidar com requisições HTTP.
+    """
+    if request.method == "POST":
+        if not model:
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": "API do Gemini não configurada corretamente."}),
+                "headers": {"Content-Type": "application/json"}
+            }
+
+        try:
+            # O front-end envia um JSON com o prompt
+            body = json.loads(request.body)
+            prompt = body.get("prompt")
+            num_ciclos = body.get("ciclos", 1) # Valor padrão de 1
+
+            if not prompt:
+                 return {
+                    "statusCode": 400,
+                    "body": json.dumps({"error": "O prompt é obrigatório."}),
+                    "headers": {"Content-Type": "application/json"}
+                }
+            
+            # Use o prompt do usuário para iniciar a auto-evolução
+            # A sua lógica de auto-evolução precisa ser adaptada para ser chamada aqui
+            # Exemplo:
+            # agente_semente = AgenteSemente()
+            # resultado = agente_semente.iniciar_ciclo_de_evolucao_api(prompt, ciclos=num_ciclos)
+
+            # Para um exemplo simples, vamos apenas passar o prompt para o Gemini
+            response = model.generate_content(prompt)
+            codigo_gerado = response.text
+
+            return {
+                "statusCode": 200,
+                "body": json.dumps({"codigo_gerado": codigo_gerado}),
+                "headers": {"Content-Type": "application/json"}
+            }
+        except Exception as e:
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": str(e)}),
+                "headers": {"Content-Type": "application/json"}
+            }
+
+    return {
+        "statusCode": 405,
+        "body": "Método não permitido.",
+        "headers": {"Content-Type": "text/plain"}
+    }
