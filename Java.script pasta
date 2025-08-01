@@ -1,0 +1,2 @@
+// O arquivo nexo.js será removido, pois sua lógica de chat
+// será integrada e substituída pela comunicação com a API no arquivo chat.js.
