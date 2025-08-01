@@ -1,0 +1,2 @@
+// O arquivo config.js pode ser removido.
+// Ou então, ficará vazio, aguardando a consolidação das dependências.
