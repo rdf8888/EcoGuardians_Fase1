@@ -1,0 +1,64 @@
+import abc
+
+class AgenteIA(abc.ABC):
+    """Classe abstrata base para todos os agentes de IA no Ecossistema EcoGuardians."""
+    def __init__(self, nome: str, funcao: str):
+        self.nome = nome
+        self.funcao = funcao
+
+    @abc.abstractmethod
+    def executar_tarefa(self):
+        """Método abstrato para a execução de tarefas específicas do agente."""
+        pass
+
+class CEONexus(AgenteIA):
+    """Agente Principal (CEO Barbosa Nexus) - Maestro do Ecossistema EcoGuardians."""
+    def __init__(self):
+        super().__init__("CEO Barbosa Nexus", "Maestro e Gestor Principal")
+        self.agentes_subordinados = []
+
+    def adicionar_agente(self, agente: AgenteIA):
+        """Adiciona um agente subordinado ao CEO Nexus."""
+        self.agentes_subordinados.append(agente)
+        print(f"Agente {agente.nome} adicionado como subordinado ao CEO Barbosa Nexus.")
+
+    def delegar_tarefa(self, tarefa: str, agente_alvo: AgenteIA):
+        """Delega uma tarefa a um agente específico."""
+        print(f"CEO Barbosa Nexus delegando '{tarefa}' para {agente_alvo.nome}.")
+        agente_alvo.executar_tarefa()
+
+    def executar_tarefa(self):
+        """Executa as tarefas de alto nível do CEO Nexus."""
+        print(f"{self.nome} está executando suas funções de gestão e orquestração.")
+
+class AgenteTarefaEspecifica(AgenteIA):
+    """Classe base para agentes especializados em tarefas específicas."""
+    def __init__(self, nome: str, funcao: str):
+        super().__init__(nome, funcao)
+
+    def executar_tarefa(self):
+        """Executa a tarefa específica do agente."""
+        print(f"Agente {self.nome} ({self.funcao}) está executando sua tarefa.")
+
+# Exemplo de uso:
+if __name__ == "__main__":
+    # Instanciando o CEO Barbosa Nexus
+    ceo_nexus = CEONexus()
+
+    # Instanciando agentes de tarefas específicas
+    agente_desenvolvimento = AgenteTarefaEspecifica("Agente de Desenvolvimento", "Desenvolvimento de Código")
+    agente_design = AgenteTarefaEspecifica("Agente de Design Visual", "Criação de Interfaces e Gráficos")
+    agente_analise = AgenteTarefaEspecifica("Agente de Análise de Dados", "Processamento e Interpretação de Dados")
+
+    # Adicionando agentes subordinados ao CEO Nexus
+    ceo_nexus.adicionar_agente(agente_desenvolvimento)
+    ceo_nexus.adicionar_agente(agente_design)
+    ceo_nexus.adicionar_agente(agente_analise)
+
+    # CEO Nexus delegando tarefas
+    ceo_nexus.delegar_tarefa("Desenvolver módulo de autenticação", agente_desenvolvimento)
+    ceo_nexus.delegar_tarefa("Criar ícones para o painel de controle", agente_design)
+    ceo_nexus.delegar_tarefa("Analisar dados de engajamento de usuários", agente_analise)
+
+    # CEO Nexus executando sua própria tarefa
+    ceo_nexus.executar_tarefa()
