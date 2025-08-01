@@ -5,52 +5,80 @@ import os
 import json
 from abc import ABC, abstractmethod
 
-# ====================================================================
-# Classes de Agentes (agora no mesmo arquivo)
-# ====================================================================
+# --- Configuração de Segurança da API ---
+# A chave é lida de uma variável de ambiente, garantindo a segurança.
+API_KEY = os.environ.get("GEMINI_API_KEY")
+model = None
 
+if API_KEY:
+    model = genai.GenerativeModel("gemini-pro", api_key=API_KEY)
+
+# --- Classes de Agentes (para futuras expansões) ---
 class AgenteIA(ABC):
-    """Classe abstrata base para todos os agentes de IA."""
     def __init__(self, nome: str, funcao: str):
         self.nome = nome
         self.funcao = funcao
-
+    
     @abstractmethod
     def executar_tarefa(self):
-        """Método abstrato para a execução de tarefas específicas."""
         pass
 
 class CEONexus(AgenteIA):
-    """Agente Principal (CEO Barbosa Nexus) - Maestro do Ecossistema."""
     def __init__(self):
-        super().__init__("CEO Barbosa Nexus", "Maestro e Gestor Principal")
+        super().__init__("CEO Nexus", "Agente Principal de Orquestração")
         self.agentes_subordinados = []
-    
-    # ... (outros métodos como adicionar_agente, delegar_tarefa, etc.) ...
 
-    def executar_tarefa(self):
-        print(f"{self.nome} está executando suas funções de gestão e orquestração.")
+    def adicionar_agente(self, agente):
+        self.agentes_subordinados.append(agente)
 
-# ====================================================================
-# Configuração e Lógica da API
-# ====================================================================
-API_KEY = os.environ.get("GEMINI_API_KEY")
-if API_KEY:
-    genai.configure(api_key=API_KEY)
-    model = genai.GenerativeModel('gemini-pro')
-else:
-    model = None
-    print("Chave de API do Gemini não encontrada.")
+    def executar_tarefa(self, prompt: str):
+        # A lógica de orquestração do CEO vai aqui na Fase 3
+        # Por enquanto, apenas repassa para o Gemini
+        pass
 
+# --- Função Principal para a Vercel ---
 def handler(request):
     """
-    Função principal que a Vercel executa.
+    Função principal que a Vercel executa para lidar com requisições HTTP.
     """
-    # Lógica do handler (recebe requisição, chama API, retorna resposta)
-    # ...
-    # Aqui, você pode instanciar as suas classes, como o CEONexus
-    # ceo = CEONexus()
-    # E usar a lógica delas para gerar o prompt para a IA.
-    # ...
-    # O restante do código do handler
-    # ...
+    if request.method == "POST":
+        if not model:
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": "API do Gemini não configurada corretamente."}),
+                "headers": {"Content-Type": "application/json"}
+            }
+
+        try:
+            body = json.loads(request.body)
+            prompt = body.get("prompt")
+
+            if not prompt:
+                return {
+                    "statusCode": 400,
+                    "body": json.dumps({"error": "O prompt é obrigatório."}),
+                    "headers": {"Content-Type": "application/json"}
+                }
+            
+            # Chama a API do Gemini de forma segura
+            response = model.generate_content(prompt)
+            codigo_gerado = response.text
+
+            return {
+                "statusCode": 200,
+                "body": json.dumps({"response": codigo_gerado}),
+                "headers": {"Content-Type": "application/json"}
+            }
+
+        except Exception as e:
+            return {
+                "statusCode": 500,
+                "body": json.dumps({"error": str(e)}),
+                "headers": {"Content-Type": "application/json"}
+            }
+
+    return {
+        "statusCode": 405,
+        "body": "Método não permitido.",
+        "headers": {"Content-Type": "text/plain"}
+    }
