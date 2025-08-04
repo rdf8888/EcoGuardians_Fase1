@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EcoGuardians Painel</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="painel-container">
+    <section class="card">
+      <h2>Maestro</h2>
+      <p>CEO Barbosa Nexus</p>
+      <div class="status-area">
+        <span class="status-indicator" id="maestro-status"></span>
+        <button class="btn-primary" id="maestro-toggle-btn">ATIVAR MAESTRO</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Agentes Subordinados</h2>
+      <div id="subordinate-agents-list" class="agents-grid"></div>
+    </section>
+
+    <section class="card">
+      <h2>Tarefas Ativas</h2>
+      <div id="task-list" class="task-grid"></div>
+    </section>
+
+    <section class="card">
+      <h2>Console de Sistema</h2>
+      <div class="console-content" id="console-content"></div>
+    </section>
+  </main>
+
+  <script src="painel.js"></script>
+</body>
+</html>

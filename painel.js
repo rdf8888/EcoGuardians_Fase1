@@ -1,0 +1,1 @@
+// painel.js será atualizado na próxima etapa.
