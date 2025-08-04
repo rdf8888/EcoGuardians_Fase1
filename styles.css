@@ -1,0 +1,92 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #0f0f0f;
+  color: #e0e0e0;
+  margin: 0;
+  padding: 0;
+}
+
+.painel-container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 20px;
+}
+
+.card {
+  background: #1e1e1e;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.status-area {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-indicator {
+  width: 14px;
+  height: 14px;
+  background: grey;
+  border-radius: 50%;
+  box-shadow: 0 0 4px grey;
+}
+
+.status-indicator.active {
+  background: #00ff00;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+.btn-primary {
+  background-color: #00c853;
+  border: none;
+  padding: 10px 18px;
+  color: white;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+.btn-primary:hover {
+  background-color: #00e676;
+}
+
+.agents-grid, .task-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.agent-item, .task-item {
+  background: #2a2a2a;
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task-status {
+  font-size: 0.9em;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 8px;
+  text-transform: uppercase;
+}
+
+.task-status.active {
+  background-color: #00e676;
+  color: #000;
+}
+
+.console-content {
+  background: #121212;
+  padding: 10px;
+  height: 200px;
+  overflow-y: auto;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.9em;
+}
