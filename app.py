@@ -277,12 +277,12 @@ async def executar(ordem: str = Form(...), file: Optional[UploadFile] = File(Non
         decisao["resultado"] += f" | 🧬 HABILIDADE '{nome}' ESTABILIZADA."
 
     # Memória
-    if supabase:
-        supabase.table("memoria_nexo").insert({
-            "ordem": ordem,
-            "resposta": decisao.get("resultado"),
-            "pensamento": decisao.get("pensamento_final")
-        }).execute()
+    # if supabase:
+    #     supabase.table("memoria_nexo").insert({
+    #         "ordem": ordem,
+    #         "resposta": decisao.get("resultado"),
+    #         "pensamento": decisao.get("pensamento_final")
+    #     }).execute()
 
     return JSONResponse(content={
         "nexo": decisao.get("resultado", "Decisão processada."),
