@@ -8,4 +8,6 @@ pypdf2
 pillow
 python-multipart
 langchain
+pinecone
+httpx
 

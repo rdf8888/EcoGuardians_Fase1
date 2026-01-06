@@ -21,3 +21,18 @@
 2026-01-06 18:31:55.954 | SUCCESS  | __main__:<module>:49 - 🔗 MEMÓRIA SOBERANA: Ativa.
 2026-01-06 19:09:11.171 | SUCCESS  | app:<module>:51 - 🔗 MEMÓRIA SOBERANA: Ativa.
 2026-01-06 19:09:34.971 | SUCCESS  | app:<module>:51 - 🔗 MEMÓRIA SOBERANA: Ativa.
+2026-01-06 19:10:04.654 | SUCCESS  | app:<module>:51 - 🔗 MEMÓRIA SOBERANA: Ativa.
+2026-01-06 19:10:39.023 | SUCCESS  | app:<module>:51 - 🔗 MEMÓRIA SOBERANA: Ativa.
+2026-01-06 19:12:14.126 | ERROR    | app:pensar_dialetica:171 - Erro na Dialética: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+2026-01-06 19:13:06.563 | SUCCESS  | app:<module>:51 - 🔗 MEMÓRIA SOBERANA: Ativa.
+2026-01-06 19:27:43.524 | SUCCESS  | app:<module>:51 - 🔗 MEMÓRIA SOBERANA: Ativa.
+2026-01-06 19:27:56.560 | SUCCESS  | app:<module>:51 - 🔗 MEMÓRIA SOBERANA: Ativa.
+2026-01-06 19:28:31.631 | SUCCESS  | app:<module>:51 - 🔗 MEMÓRIA SOBERANA: Ativa.
+2026-01-06 19:28:45.566 | ERROR    | app:pensar_dialetica:171 - Erro na Dialética: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+2026-01-06 19:31:00.706 | SUCCESS  | app:<module>:51 - 🔗 MEMÓRIA SOBERANA: Ativa.
+2026-01-06 19:41:09.235 | SUCCESS  | app:<module>:128 - 🔗 MEMÓRIA SOBERANA: Ativa.
+2026-01-06 19:41:09.474 | ERROR    | app:__init__:148 - ⚠️ MEMÓRIA VETORIAL: Falha - (401)
+Reason: Unauthorized
+HTTP response headers: HTTPHeaderDict({'x-pinecone-api-version': '2025-10', 'x-cloud-trace-context': '5b49170589cd9e80ae82cf72bd489e05', 'date': 'Tue, 06 Jan 2026 19:41:09 GMT', 'content-type': 'text/html', 'server': 'Google Frontend', 'Content-Length': '15', 'Via': '1.1 google', 'Alt-Svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'})
+HTTP response body: Invalid API Key
+
