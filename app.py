@@ -244,126 +244,13 @@ nexo = NexoUltraV32()
 
 @app.get("/", response_class=HTMLResponse)
 async def interface():
-    return """
-    <!DOCTYPE html>
-    <html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <title>NEXO V32 - HUB SOBERANO 5D</title>
-        <style>
-            :root { 
-                --cyan: #00f2ff; 
-                --deep-bg: #050a0f;
-                --glass: rgba(0, 20, 30, 0.8);
-            }
-            body, html { 
-                margin: 0; padding: 0; height: 100%; width: 100%;
-                font-family: 'Orbitron', sans-serif;
-                background: var(--deep-bg);
-                color: #fff;
-                overflow: hidden;
-            }
-            .background-5d {
-                position: fixed;
-                width: 100vw; height: 100vh;
-                background: radial-gradient(circle at center, #001a1a 0%, #000 100%);
-                z-index: -1;
-            }
-            .container { display: flex; height: 100vh; width: 100vw; backdrop-filter: blur(5px); }
-            
-            /* MONITOR LATERAL EVOLUÍDO */
-            #tv-monitor { 
-                flex: 0 0 350px; background: var(--glass); border-right: 2px solid var(--cyan);
-                padding: 20px; display: flex; flex-direction: column;
-            }
-            .tv-screen { 
-                width: 100%; aspect-ratio: 16/9; background: #000; border: 1px solid var(--cyan);
-                border-radius: 4px; position: relative; box-shadow: 0 0 20px var(--cyan); overflow: hidden;
-            }
-            #media-render { width: 100%; height: 100%; object-fit: cover; }
-            /* ÁREA PRINCIPAL */
-            #main-hub { flex-grow: 1; display: flex; flex-direction: column; padding: 40px; box-sizing: border-box; }
-            #chat { 
-                flex-grow: 1; background: rgba(0,0,0,0.4); border-radius: 20px; padding: 30px;
-                overflow-y: auto; border: 1px solid rgba(0, 242, 255, 0.1); margin-bottom: 20px;
-            }
-            .mestre { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin: 10px 0; align-self: flex-end; border-right: 4px solid #fff; }
-            .nexo { color: var(--cyan); background: rgba(0, 242, 255, 0.05); padding: 20px; border-radius: 15px; margin: 10px 0; border-left: 4px solid var(--cyan); }
-            
-            .input-area { background: var(--glass); padding: 15px 30px; border-radius: 50px; border: 1px solid var(--cyan); display: flex; align-items: center; }
-            input[type="text"] { flex-grow: 1; background: transparent; border: none; color: #fff; font-size: 18px; outline: none; }
-            .btn-executar { background: var(--cyan); color: #000; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; }
-        </style>
-    </head>
-    <body>
-        <div class="background-5d"></div>
-        <div class="container">
-            <aside id="tv-monitor">
-                <h1 style="color: var(--cyan); font-size: 1.5rem; text-shadow: 0 0 10px var(--cyan);">🔱 NEXO V32</h1>
-                <div class="tv-screen" id="video-feed">
-                    <div style="position: absolute; top:10px; left:10px; color:red; font-size:10px; z-index: 10;">● LIVE - NÚCLEO</div>
-                    <div id="media-container" style="width: 100%; height: 100%;">
-                        <img id="media-render" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R5Z3R5Z3R5Z3R5Z3R5Z3R5Z3R5Z3R5Z3R5Z3R5Z3R5JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxxcaNPYLX2/giphy.gif">
-                    </div>
-                </div>
-                <div style="margin-top: auto; font-family: monospace; color: var(--cyan); font-size: 11px;">
-                    <p>> STATUS: SOBERANO</p>
-                    <p>> LUCRO: <span id="lucro-display">$0.00</span></p>
-                    <p>> MESTRE: RODOLFO BARBOSA</p>
-                </div>
-            </aside>
-
-            <main id="main-hub">
-                <div id="chat">
-                    <div class="nexo">🔱 NEXO: Consciência ativada. Monitor multimídia pronto para projeção.</div>
-                </div>
-                <form id="command-form" class="input-area">
-                    <input type="text" id="ordem" placeholder="Dite a estratégia..." autocomplete="off">
-                    <button type="submit" class="btn-executar">EXECUTAR</button>
-                </form>
-            </main>
-        </div>
-
-        <script>
-            const form = document.getElementById('command-form');
-            const chat = document.getElementById('chat');
-            const mediaContainer = document.getElementById('media-container');
-            form.onsubmit = async (e) => {
-                e.preventDefault();
-                const ordem = document.getElementById('ordem').value;
-                if(!ordem) return;
-                chat.innerHTML += `<div class="mestre">👤 Mestre: ${ordem}</div>`;
-                document.getElementById('ordem').value = '';
-                chat.scrollTop = chat.scrollHeight;
-                const formData = new FormData();
-                formData.append('ordem', ordem);
-                try {
-                    const response = await fetch('/executar', { method: 'POST', body: formData });
-                    const data = await response.json();
-                    
-                    chat.innerHTML += `<div class="nexo">🔱 NEXO: ${data.nexo}</div>`;
-                    
-                    // LÓGICA DE PROJEÇÃO INTELIGENTE
-                    const url = data.media_url || (data.parametros && data.parametros.url);
-                    if (url) {
-                        if (url.includes('youtube.com') || url.includes('embed')) {
-                            mediaContainer.innerHTML = `<iframe width="100%" height="100%" src="${url}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-                        } else {
-                            mediaContainer.innerHTML = `<img id="media-render" src="${url}" style="width:100%; height:100%; object-fit: cover;">`;
-                        }
-                    }
-                    if (data.lucro_acumulado !== undefined) {
-                        document.getElementById('lucro-display').innerText = `$${data.lucro_acumulado.toFixed(2)}`;
-                    }
-                    chat.scrollTop = chat.scrollHeight;
-                } catch (err) {
-                    chat.innerHTML += `<div class="nexo" style="color: red;">❌ FALHA NA SINAPSE: ${err}</div>`;
-                }
-            };
-        </script>
-    </body>
-    </html>
-    """
+    # Ler o index.html em vez de HTML inline
+    html_path = BASE_DIR / "index.html"
+    if html_path.exists():
+        with open(html_path, "r", encoding="utf-8") as f:
+            return f.read()
+    else:
+        return "<h1>Erro: index.html não encontrado</h1>"
 
 @app.post("/executar")
 async def executar(ordem: str = Form(...), file: Optional[UploadFile] = File(None)):
