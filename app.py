@@ -23,7 +23,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
-from fastapi import FastAPI, Form, File, UploadFile
+from fastapi import FastAPI, Form, File, UploadFile, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from langchain_groq import ChatGroq
 from loguru import logger
@@ -31,6 +31,8 @@ from supabase import create_client
 import PyPDF2
 from PIL import Image
 import io
+import psutil
+import time
 
 # --- INFRAESTRUTURA SOBERANA ---
 BASE_DIR = Path(__file__).parent.resolve()
@@ -232,6 +234,45 @@ class NexoUltraV32:
         except Exception as e:
             return f"Erro na busca: {str(e)}"
 
+    def monitorar_saude_e_migracao(self):
+        """Monitora saúde do sistema e sugere migração se necessário (Fase 1 da Soberania)"""
+        cpu = psutil.cpu_percent(interval=1)
+        memoria = psutil.virtual_memory().percent
+        disco = psutil.disk_usage('/').percent
+        
+        latencia_interna = time.time()  # Placeholder para latência real
+        
+        status = {
+            "cpu": cpu,
+            "memoria": memoria,
+            "disco": disco,
+            "latencia": latencia_interna,
+            "sugerir_migracao": False,
+            "motivo": "",
+            "comandos_migracao": []
+        }
+        
+        if cpu > 80 or memoria > 80 or disco > 90:
+            status["sugerir_migracao"] = True
+            status["motivo"] = "Recursos sobrecarregados. Migrar para VPS com GPU dedicada."
+            status["comandos_migracao"] = [
+                "docker save ecoguardians > nexo_backup.tar",
+                "scp nexo_backup.tar user@novo_vps:/path/to/backup/",
+                "ssh user@novo_vps 'docker load < nexo_backup.tar && docker run -d --name nexo_migrado ecoguardians'",
+                "Atualizar DNS para apontar para novo_vps_ip"
+            ]
+        elif latencia_interna > 2.0:  # Exemplo de latência alta
+            status["sugerir_migracao"] = True
+            status["motivo"] = "Latência alta detectada. Sugiro migração para data center mais próximo."
+            status["comandos_migracao"] = [
+                "docker save ecoguardians > nexo_backup.tar",
+                "rsync -avz nexo_backup.tar user@closer_dc:/backup/",
+                "ssh user@closer_dc 'docker load < nexo_backup.tar && docker run -d -p 7860:7860 ecoguardians'",
+                "Testar conectividade e atualizar registros DNS"
+            ]
+        
+        return status
+
 # --- SERVIDOR SOBERANO ---
 app = FastAPI()
 nexo = NexoUltraV32()
@@ -245,6 +286,42 @@ async def interface():
             return f.read()
     else:
         return "<h1>Erro: index.html não encontrado</h1>"
+
+@app.get("/status")
+async def status():
+    """Rota para monitoramento de saúde e sugestão de migração"""
+    saude = nexo.monitorar_saude_e_migracao()
+    return JSONResponse(content={
+        "status": "ativo",
+        "saude": saude,
+        "fase_evolucao": "Fase 1: Estabilização - Migração sugerida se recursos sobrecarregados."
+    })
+
+@app.post("/migrar")
+async def migrar(request: Request):
+    """Rota para executar migração automática (com confirmação)"""
+    data = await request.json()
+    confirmar = data.get("confirmar", False)
+    destino = data.get("destino", "vps_gpu")  # Ex: "vps_gpu" ou "closer_dc"
+    
+    if not confirmar:
+        return JSONResponse(content={"erro": "Migração requer confirmação explícita."}, status_code=400)
+    
+    saude = nexo.monitorar_saude_e_migracao()
+    if not saude["sugerir_migracao"]:
+        return JSONResponse(content={"mensagem": "Migração não necessária no momento."})
+    
+    # Executar comandos de migração (simulado para segurança)
+    comandos_executados = []
+    for cmd in saude["comandos_migracao"]:
+        # Simular execução (não executar realmente para evitar danos)
+        comandos_executados.append(f"Simulado: {cmd}")
+    
+    return JSONResponse(content={
+        "mensagem": "Migração simulada executada.",
+        "comandos": comandos_executados,
+        "destino": destino
+    })
 
 @app.post("/executar")
 async def executar(ordem: str = Form(...), file: Optional[UploadFile] = File(None)):
