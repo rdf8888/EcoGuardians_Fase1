@@ -1,19 +1,5 @@
 import os
 import sys
-import subprocess
-
-# --- MOTOR DE AUTO-REPARO (Para ambientes sem terminal) ---
-def garantir_dependencias():
-    libs = ["loguru", "langchain-groq", "fastapi", "uvicorn", "supabase", "python-dotenv", "pypdf2", "pillow", "python-multipart", "langchain"]
-    for lib in libs:
-        try:
-            __import__(lib.replace("-", "_"))
-        except ImportError:
-            print(f"🧬 NEXO: Instalando engrenagem faltante: {lib}...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
-
-# Executa o reparo antes de qualquer importação crítica
-garantir_dependencias()
 
 # --- AGORA OS IMPORTS NORMAIS ---
 import asyncio
@@ -24,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from langchain_groq import ChatGroq
 from loguru import logger
@@ -240,6 +227,13 @@ class NexoUltraV32:
 
 # --- SERVIDOR SOBERANO ---
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 nexo = NexoUltraV32()
 
 @app.get("/", response_class=HTMLResponse)
