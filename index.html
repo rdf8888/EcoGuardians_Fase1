@@ -38,6 +38,8 @@
         </div>
         <form id="command-form" class="input-area">
             <input type="text" id="ordem" placeholder="Dite o próximo passo da nossa evolução..." autocomplete="off">
+            <input type="file" id="file" accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
+            <button type="button" onclick="document.getElementById('file').click();" style="background: rgba(0, 242, 255, 0.2); border: 1px solid var(--cyan); color: var(--cyan); padding: 10px; margin-right: 10px;">📎</button>
             <button type="submit">EXECUTAR</button>
         </form>
     </main>
@@ -50,21 +52,35 @@
         form.onsubmit = async (e) => {
             e.preventDefault();
             const ordem = document.getElementById('ordem').value;
-            if(!ordem) return;
+            const fileInput = document.getElementById('file');
+            const file = fileInput.files[0];
+            if(!ordem && !file) return;
 
-            chat.innerHTML += `<div class="mestre">👤 Mestre: ${ordem}</div>`;
+            chat.innerHTML += `<div class="mestre">👤 Mestre: ${ordem || 'Arquivo enviado'}</div>`;
+            if (file) {
+                chat.innerHTML += `<div class="mestre">📎 Arquivo: ${file.name}</div>`;
+            }
             document.getElementById('ordem').value = '';
+            fileInput.value = '';
             chat.scrollTop = chat.scrollHeight;
 
             const formData = new FormData();
             formData.append('ordem', ordem);
+            if (file) {
+                formData.append('file', file);
+            }
 
             try {
                 // Rota que conecta ao seu app.py (agente Groq)
                 const response = await fetch('/executar', { method: 'POST', body: formData });
                 const data = await response.json();
                 
-                chat.innerHTML += `<div class="nexo">🔱 NEXO: ${data.nexo}</div>`;
+                // Mostrar debate dialético
+                if(data.debate_interno) {
+                    chat.innerHTML += `<div class="nexo" style="color: #0088ff;"><b>[ARQUITETO]:</b> ${data.debate_interno.arquiteto}</div>`;
+                    chat.innerHTML += `<div class="nexo" style="color: #ff4444;"><b>[AUDITOR]:</b> ${data.debate_interno.auditor}</div>`;
+                }
+                chat.innerHTML += `<div class="nexo">🔱 <b>NEXO:</b> ${data.nexo}</div>`;
                 
                 // Se o agente enviar uma imagem ou vídeo, o monitor atualiza
                 if(data.media_url) {

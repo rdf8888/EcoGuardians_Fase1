@@ -238,47 +238,13 @@ nexo = NexoUltraV32()
 
 @app.get("/", response_class=HTMLResponse)
 async def interface():
-    return """
-    <body style="background:#000; color:#0f0; font-family:monospace; padding:20px;">
-        <h1>🔱 NEXO V32 | ULTRA DIALÉTICO</h1>
-        <div id="term" style="border:1px solid #0f0; height:60vh; overflow:auto; padding:15px; background:#050505; margin-bottom:10px;"></div>
-        <form id="f" enctype="multipart/form-data">
-            <input type="text" id="i" placeholder="Dite a Ordem Estratégica..." style="width:70%; background:#000; color:#fff; border:1px solid #0f0; padding:12px;">
-            <input type="file" id="file" accept=".pdf,.png,.jpg,.jpeg" style="width:25%; background:#000; color:#fff; border:1px solid #0f0; padding:12px;">
-            <button type="submit" style="width:5%; background:#0f0; color:#000; border:1px solid #0f0; padding:12px;">Enviar</button>
-        </form>
-        <script>
-            document.getElementById('f').onsubmit = async (e) => {
-                e.preventDefault();
-                const i = document.getElementById('i');
-                const fileInput = document.getElementById('file');
-                const term = document.getElementById('term');
-                const val = i.value;
-                const file = fileInput.files[0];
-                term.innerHTML += `<div style='color:#fff'>> ${val}</div>`;
-                if (file) {
-                    term.innerHTML += `<div style='color:#fff'>Arquivo: ${file.name}</div>`;
-                }
-                const fd = new FormData();
-                fd.append('ordem', val);
-                if (file) {
-                    fd.append('file', file);
-                }
-                term.innerHTML += `<div style="color:#ffff00;">🔱 NEXO está debatendo dialeticamente...</div>`;
-                const res = await fetch('/executar', { method: 'POST', body: fd });
-                const d = await res.json();
-                
-                term.innerHTML += `<div style="color:#0088ff;"><b>[ARQUITETO]:</b> ${d.debate_interno.arquiteto}</div>`;
-                term.innerHTML += `<div style="color:#ff4444;"><b>[AUDITOR]:</b> ${d.debate_interno.auditor}</div>`;
-                term.innerHTML += `<div style="color:#0f0;">🔱 <b>NEXO:</b> ${d.resultado}</div><hr style="border:0.1px solid #333;">`;
-                
-                i.value = '';
-                fileInput.value = '';
-                term.scrollTop = term.scrollHeight;
-            };
-        </script>
-    </body>
-    """
+    # Ler o index.html em vez de HTML inline
+    html_path = BASE_DIR / "index.html"
+    if html_path.exists():
+        with open(html_path, "r", encoding="utf-8") as f:
+            return f.read()
+    else:
+        return "<h1>Erro: index.html não encontrado</h1>"
 
 @app.post("/executar")
 async def executar(ordem: str = Form(...), file: Optional[UploadFile] = File(None)):
