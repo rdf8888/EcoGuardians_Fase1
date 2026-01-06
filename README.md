@@ -1,22 +1,45 @@
-# EcoGuardians - Sistema de Agentes IA Futurista
+---
+title: NEXO V32 Ultra Dialético
+emoji: 🔱
+colorFrom: black
+colorTo: green
+sdk: docker
+app_port: 7860
+---
 
-![EcoGuardians](https://img.shields.io/badge/EcoGuardians-Sistema%20de%20Agentes%20IA-00ffff?style=for-the-badge)
+# 🔱 NEXO V32 | Ultra Dialético
+
+![NEXO](https://img.shields.io/badge/NEXO-Sistema%20de%20IA%20Soberano-00ffff?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.11+-blue?style=for-the-badge&logo=python)
-![Flask](https://img.shields.io/badge/Flask-2.0+-green?style=for-the-badge&logo=flask)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow?style=for-the-badge&logo=javascript)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?style=for-the-badge&logo=fastapi)
+![Groq](https://img.shields.io/badge/Groq-Llama%203.3%2070B-yellow?style=for-the-badge)
 
 ## 📋 Descrição
 
-O EcoGuardians é um sistema completo de agentes de inteligência artificial com interface futurista inspirada em painéis de controle de ficção científica. O sistema apresenta uma TV futurista central com efeitos neon, áreas divididas para controle de agentes, e um console de comunicação interativo.
+O NEXO V32 é um agente de IA ultra-dialético soberano, projetado para construir soberania digital com lucro 30/30/40 e zero lixo. Utiliza debate interno (Arquiteto vs. Auditor) para decisões estratégicas, com ferramentas externas para execução autônoma.
 
 ### 🎯 Características Principais
 
-- **Interface Futurista**: Design inspirado em ficção científica com efeitos neon e animações
-- **Sistema de Agentes IA**: Arquitetura hierárquica com CEO Nexus e agentes subordinados
-- **Painel Interativo**: Controles responsivos para ativação e gerenciamento de agentes
-- **Console de Comunicação**: Sistema de mensagens em tempo real entre agentes
-- **API RESTful**: Back-end Flask para gerenciamento completo do sistema
-- **Persistência de Dados**: Sistema de salvamento e carregamento de estado dos agentes
+- **Debate Dialético**: Auto-questionamento com Arquiteto (lucro/rápido) vs. Auditor (crítico/risco)
+- **Ferramentas Externas**: Comando seguro, consulta financeira, swarm de sub-agentes, busca web
+- **Processamento Multimídia**: Visão para imagens, extração de texto PDF
+- **Auto-Evolução**: Geração e instalação de habilidades Python
+- **Memória Soberana**: Integração com Supabase para histórico
+- **Interface Terminal**: UI futurista estilo terminal hacker
+
+### 🚀 Como Usar
+
+1. **Ordens Diretas**: Digite comandos como "Consulte preço do Bitcoin" ou "Execute ls"
+2. **Upload de Arquivos**: Envie PDFs para análise ou imagens para descrição visual
+3. **Ferramentas Automáticas**: O AI decide usar ferramentas baseado no debate interno
+
+### 🛠️ Tecnologias
+
+- **IA**: Groq (Llama 3.3 70B, Llama 3.2 Vision)
+- **Backend**: FastAPI com Uvicorn
+- **Banco**: Supabase (PostgreSQL)
+- **Visão**: LangChain para integração multimodal
+- **Segurança**: Whitelist de comandos, auto-reparo de dependências
 
 ## 🚀 Tecnologias Utilizadas
 

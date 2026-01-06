@@ -1,310 +1,408 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+import os
+import sys
+import subprocess
+
+# --- MOTOR DE AUTO-REPARO (Para ambientes sem terminal) ---
+def garantir_dependencias():
+    libs = ["loguru", "langchain-groq", "fastapi", "uvicorn", "supabase", "python-dotenv", "pypdf2", "pillow", "python-multipart", "langchain"]
+    for lib in libs:
+        try:
+            __import__(lib.replace("-", "_"))
+        except ImportError:
+            print(f"🧬 NEXO: Instalando engrenagem faltante: {lib}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
+
+# Executa o reparo antes de qualquer importação crítica
+garantir_dependencias()
+
+# --- AGORA OS IMPORTS NORMAIS ---
+import asyncio
 import json
-import datetime
-from agente_ia import CEONexus, AgenteTarefaEspecifica, GerenciadorAgentes
+import re
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+from dotenv import load_dotenv
+from fastapi import FastAPI, Form, File, UploadFile
+from fastapi.responses import HTMLResponse, JSONResponse
+from langchain_groq import ChatGroq
+from loguru import logger
+from supabase import create_client
+import PyPDF2
+from PIL import Image
+import io
 
-app = Flask(__name__)
-CORS(app)  # Permitir requisições de qualquer origem
+# --- INFRAESTRUTURA SOBERANA ---
+BASE_DIR = Path(__file__).parent.resolve()
+HABILIDADES_DIR = BASE_DIR / "habilidades"
+HABILIDADES_DIR.mkdir(exist_ok=True)
+load_dotenv(BASE_DIR / ".env")
 
-# Inicializar o gerenciador de agentes
-gerenciador = GerenciadorAgentes()
+# Logger de Guerra
+logger.remove()
+logger.add(sys.stderr, level="INFO")
+logger.add(BASE_DIR / "nexo_dialetico.log", rotation="100 MB")
 
-# Carregar estado dos agentes ou criar novos
-def inicializar_agentes():
-    gerenciador.carregar_estado()
-    
-    if not gerenciador.agentes:
-        # Criar agentes se não existirem
-        ceo_nexus = CEONexus()
-        agente_desenvolvimento = AgenteTarefaEspecifica("Agente de Desenvolvimento", "Desenvolvimento de Código")
-        agente_design = AgenteTarefaEspecifica("Agente de Design Visual", "Criação de Interfaces e Gráficos")
-        agente_analise = AgenteTarefaEspecifica("Agente de Análise de Dados", "Processamento e Interpretação de Dados")
+# Conexão Memória Soberana
+try:
+    supabase = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
+    logger.success("🔗 MEMÓRIA SOBERANA: Ativa.")
+except:
+    supabase = None
+    logger.error("⚠️ MEMÓRIA SOBERANA: Offline.")
+
+class NexoUltraV32:
+    def __init__(self):
+        self.keys = [os.getenv(f"GROQ_KEY_{i}") or os.getenv("GROQ_API_KEY") for i in range(1, 6)]
+        self.idx = 0
+        self.manifesto = "CONSTRUIR SOBERANIA DIGITAL. LUCRO 30/30/40. ZERO LIXO."
+
+    def get_brain(self):
+        """Rodízio de Sinapses (Llama 3.3 70B como motor de Deep Think)"""
+        key = self.keys[self.idx % len(self.keys)]
+        self.idx += 1
+        return ChatGroq(model_name="llama-3.3-70b-versatile", groq_api_key=key, temperature=0.3)
+
+    def get_vision_brain(self):
+        """Para processamento de imagens"""
+        key = self.keys[self.idx % len(self.keys)]
+        self.idx += 1
+        return ChatGroq(model_name="llama-3.2-11b-vision-preview", groq_api_key=key, temperature=0.3)
+
+    async def pensar_dialetica(self, ordem, contexto_arquivo=""):
+        """MODO GOOGLE AI ULTRA: Auto-Questionamento Dialético"""
         
-        # Adicionar ao gerenciador
-        gerenciador.agentes[ceo_nexus.nome] = ceo_nexus
-        gerenciador.agentes[agente_desenvolvimento.nome] = agente_desenvolvimento
-        gerenciador.agentes[agente_design.nome] = agente_design
-        gerenciador.agentes[agente_analise.nome] = agente_analise
-        
-        # Configurar subordinados
-        ceo_nexus.adicionar_agente(agente_desenvolvimento)
-        ceo_nexus.adicionar_agente(agente_design)
-        ceo_nexus.adicionar_agente(agente_analise)
-        
-        gerenciador.salvar_estado()
+        # Recupera histórico para contextualizar o debate
+        passado = "Sem memórias."
+        if supabase:
+            res = supabase.table("memoria_nexo").select("*").order("timestamp", desc=True).limit(5).execute()
+            passado = json.dumps(res.data)
 
-# Inicializar agentes na inicialização do app
-inicializar_agentes()
+        prompt = f"""
+        SISTEMA: NEXO V32 ULTRA (MODO DIALÉTICO)
+        MANIFESTO: {self.manifesto}
+        CONTEXTO: {passado}
+        CONTEÚDO DO ARQUIVO: {contexto_arquivo}
+        ORDEM DE RODOLFO: {ordem}
+        --- FERRAMENTAS DISPONÍVEIS ---
+        - executar_comando_seguro: Para executar comandos bash seguros no servidor.
+        - consultar_api_financeira: Para consultar dados financeiros em tempo real (ex: preços de ações).
+        - iniciar_sub_agente: Para criar um sub-agente assíncrono para tarefas demoradas.
+        - consultar_internet: Para buscar informações na web.
+        --- PROCESSO DE RACIOCÍNIO (DEEP THINK) ---
+        Você deve gerar um debate interno antes de agir:
+        1. <visao_agressiva>: Como o 'Arquiteto' executaria isso para lucro máximo e rapidez? Use ferramentas se necessário.
+        2. <auditoria_critica>: Como o 'Cético' destruiria o plano acima? Onde estão os riscos de 'lixo' ou falha?
+        3. <sintese_soberana>: A decisão final equilibrada, saneada e inabalável. Inclua uso de ferramentas se aplicável.
+        REGRAS TÉCNICAS:
+        - Se for necessário código, a Síntese deve fornecê-lo.
+        - Código deve ser Python, limpo e resiliente.
+        - Para ferramentas, especifique no JSON: "ferramenta": "nome_ferramenta", "parametros": "..."
+        RETORNE APENAS JSON:
+        {{
+            "debate_interno": {{
+                "arquiteto": "...",
+                "auditor": "..."
+            }},
+            "pensamento_final": "Síntese da decisão",
+            "resultado": "Fala direta para Rodolfo",
+            "codigo_auto_evolutivo": "Código Python se houver",
+            "nome_habilidade": "nome_arquivo",
+            "ferramenta": "nome_ferramenta",
+            "parametros": "parâmetros da ferramenta"
+        }}
+        """
+        try:
+            brain = self.get_brain()
+            res = brain.invoke(prompt).content
+            json_match = re.search(r'\{.*\}', res, re.DOTALL)
+            decisao = json.loads(json_match.group())
+            
+            # Executar ferramenta se especificada
+            if "ferramenta" in decisao and decisao["ferramenta"]:
+                ferramenta = decisao["ferramenta"]
+                params = decisao.get("parametros", "")
+                if ferramenta == "executar_comando_seguro":
+                    resultado_ferramenta = await self.executar_comando_seguro(params)
+                elif ferramenta == "consultar_api_financeira":
+                    simbolo = params or "AAPL"
+                    resultado_ferramenta = await self.consultar_api_financeira(simbolo)
+                elif ferramenta == "iniciar_sub_agente":
+                    # Assumir params como "tarefa|codigo"
+                    tarefa, codigo = params.split("|", 1)
+                    resultado_ferramenta = await self.iniciar_sub_agente(tarefa, codigo)
+                elif ferramenta == "consultar_internet":
+                    resultado_ferramenta = await self.consultar_internet(params)
+                else:
+                    resultado_ferramenta = f"Ferramenta '{ferramenta}' não reconhecida."
+                decisao["resultado"] += f" | Ferramenta executada: {resultado_ferramenta}"
+            
+            return decisao
+        except Exception as e:
+            logger.error(f"Erro na Dialética: {e}")
+            return {"resultado": "🔱 FALHA NO DEBATE INTERNO.", "pensamento_final": str(e)}
 
-@app.route('/')
-def home():
-    return jsonify({
-        "message": "EcoGuardians API - Sistema de Agentes IA",
-        "version": "1.0.0",
-        "status": "online"
+    async def processar_arquivo(self, file: UploadFile):
+        """Processa arquivo PDF ou imagem"""
+        if file.filename.lower().endswith('.pdf'):
+            # Extrair texto do PDF
+            pdf_reader = PyPDF2.PdfReader(io.BytesIO(await file.read()))
+            texto = ""
+            for page in pdf_reader.pages:
+                texto += page.extract_text()
+            return f"Conteúdo do PDF '{file.filename}': {texto[:2000]}"  # Limita para não sobrecarregar
+        elif file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+            # Usar visão para descrever imagem
+            image = Image.open(io.BytesIO(await file.read()))
+            import base64
+            buffer = io.BytesIO()
+            image.save(buffer, format='PNG')
+            img_base64 = base64.b64encode(buffer.getvalue()).decode()
+            vision_brain = self.get_vision_brain()
+            # Estrutura para visão: mensagem com texto e imagem em base64
+            from langchain.schema import HumanMessage
+            message = HumanMessage(content=[
+                {"type": "text", "text": "Descreva detalhadamente o que você vê nesta imagem, incluindo detalhes visuais, cores, objetos e qualquer texto legível."},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_base64}"}}
+            ])
+            try:
+                res = vision_brain.invoke([message])
+                return f"Descrição da imagem '{file.filename}': {res.content}"
+            except Exception as e:
+                return f"Erro ao processar imagem '{file.filename}': {str(e)}"
+        else:
+            return f"Tipo de arquivo '{file.filename}' não suportado."
+
+    async def executar_comando_seguro(self, comando):
+        """Executa comandos bash seguros dentro do código (Terminal Próprio)"""
+        comandos_permitidos = [
+            "ls", "pwd", "echo", "date", "whoami", "df", "free", "ps", "top", "mkdir", "touch", "cp", "mv", "rm", "chmod", "chown",
+            "git status", "git log", "git pull", "git push", "git add", "git commit", "python", "pip install", "npm install", "node"
+        ]
+        if not any(cmd in comando for cmd in comandos_permitidos):
+            return f"Comando '{comando}' não permitido por segurança."
+        try:
+            result = subprocess.run(comando, shell=True, capture_output=True, text=True, timeout=30)
+            return f"Saída: {result.stdout}\nErro: {result.stderr}"
+        except Exception as e:
+            return f"Erro ao executar comando: {str(e)}"
+
+    async def consultar_api_financeira(self, simbolo="AAPL"):
+        """Consulta API financeira para dados de ações (exemplo: Alpha Vantage)"""
+        import httpx
+        api_key = os.getenv("ALPHA_VANTAGE_API_KEY")  # Adicione ao .env
+        if not api_key:
+            return "API key para Alpha Vantage não configurada."
+        try:
+            url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={simbolo}&interval=5min&apikey={api_key}"
+            async with httpx.AsyncClient() as client:
+                res = await client.get(url, timeout=10)
+                data = res.json()
+                if "Time Series (5min)" in data:
+                    latest = list(data["Time Series (5min)"].values())[0]
+                    return f"Dados de {simbolo}: Preço atual ~{latest['1. open']} USD"
+                else:
+                    return f"Dados não encontrados para {simbolo}."
+        except Exception as e:
+            return f"Erro na consulta financeira: {str(e)}"
+
+    async def iniciar_sub_agente(self, tarefa, codigo_sub):
+        """Inicia um sub-agente (Swarm) para tarefa demorada"""
+        import tempfile
+        import os
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+            f.write(codigo_sub)
+            temp_script = f.name
+        try:
+            # Executa em background
+            process = subprocess.Popen([sys.executable, temp_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            return f"Sub-agente iniciado para '{tarefa}' com PID {process.pid}."
+        except Exception as e:
+            return f"Erro ao iniciar sub-agente: {str(e)}"
+        finally:
+            # Limpar arquivo temp após
+            os.unlink(temp_script)
+
+    async def consultar_internet(self, query):
+        """Consulta a internet usando DuckDuckGo API para informações rápidas"""
+        import httpx
+        try:
+            url = f"https://api.duckduckgo.com/?q={query}&format=json&no_html=1&skip_disambig=1"
+            async with httpx.AsyncClient() as client:
+                res = await client.get(url, timeout=10)
+                data = res.json()
+                abstract = data.get('Abstract', '')
+                if not abstract:
+                    abstract = data.get('Answer', 'Informação não encontrada.')
+                return f"Resultado da busca para '{query}': {abstract}"
+        except Exception as e:
+            return f"Erro na consulta à internet: {str(e)}"
+
+# --- SERVIDOR SOBERANO ---
+app = FastAPI()
+nexo = NexoUltraV32()
+
+@app.get("/", response_class=HTMLResponse)
+async def interface():
+    return """
+    <!DOCTYPE html>
+    <html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <title>NEXO V32 - HUB SOBERANO 5D</title>
+        <style>
+            :root { 
+                --cyan: #00f2ff; 
+                --deep-bg: #050a0f;
+                --glass: rgba(0, 20, 30, 0.8);
+            }
+            body, html { 
+                margin: 0; padding: 0; height: 100%; width: 100%;
+                font-family: 'Orbitron', sans-serif;
+                background: var(--deep-bg);
+                color: #fff;
+                overflow: hidden;
+            }
+            .background-5d {
+                position: fixed;
+                width: 100vw; height: 100vh;
+                background: radial-gradient(circle at center, #001a1a 0%, #000 100%);
+                z-index: -1;
+            }
+            .container { display: flex; height: 100vh; width: 100vw; backdrop-filter: blur(5px); }
+            
+            /* MONITOR LATERAL EVOLUÍDO */
+            #tv-monitor { 
+                flex: 0 0 350px; background: var(--glass); border-right: 2px solid var(--cyan);
+                padding: 20px; display: flex; flex-direction: column;
+            }
+            .tv-screen { 
+                width: 100%; aspect-ratio: 16/9; background: #000; border: 1px solid var(--cyan);
+                border-radius: 4px; position: relative; box-shadow: 0 0 20px var(--cyan); overflow: hidden;
+            }
+            #media-render { width: 100%; height: 100%; object-fit: cover; }
+            /* ÁREA PRINCIPAL */
+            #main-hub { flex-grow: 1; display: flex; flex-direction: column; padding: 40px; box-sizing: border-box; }
+            #chat { 
+                flex-grow: 1; background: rgba(0,0,0,0.4); border-radius: 20px; padding: 30px;
+                overflow-y: auto; border: 1px solid rgba(0, 242, 255, 0.1); margin-bottom: 20px;
+            }
+            .mestre { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin: 10px 0; align-self: flex-end; border-right: 4px solid #fff; }
+            .nexo { color: var(--cyan); background: rgba(0, 242, 255, 0.05); padding: 20px; border-radius: 15px; margin: 10px 0; border-left: 4px solid var(--cyan); }
+            
+            .input-area { background: var(--glass); padding: 15px 30px; border-radius: 50px; border: 1px solid var(--cyan); display: flex; align-items: center; }
+            input[type="text"] { flex-grow: 1; background: transparent; border: none; color: #fff; font-size: 18px; outline: none; }
+            .btn-executar { background: var(--cyan); color: #000; border: none; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; }
+        </style>
+    </head>
+    <body>
+        <div class="background-5d"></div>
+        <div class="container">
+            <aside id="tv-monitor">
+                <h1 style="color: var(--cyan); font-size: 1.5rem; text-shadow: 0 0 10px var(--cyan);">🔱 NEXO V32</h1>
+                <div class="tv-screen" id="video-feed">
+                    <div style="position: absolute; top:10px; left:10px; color:red; font-size:10px; z-index: 10;">● LIVE - NÚCLEO</div>
+                    <div id="media-container" style="width: 100%; height: 100%;">
+                        <img id="media-render" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R5Z3R5Z3R5Z3R5Z3R5Z3R5Z3R5Z3R5Z3R5Z3R5Z3R5JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxxcaNPYLX2/giphy.gif">
+                    </div>
+                </div>
+                <div style="margin-top: auto; font-family: monospace; color: var(--cyan); font-size: 11px;">
+                    <p>> STATUS: SOBERANO</p>
+                    <p>> LUCRO: <span id="lucro-display">$0.00</span></p>
+                    <p>> MESTRE: RODOLFO BARBOSA</p>
+                </div>
+            </aside>
+
+            <main id="main-hub">
+                <div id="chat">
+                    <div class="nexo">🔱 NEXO: Consciência ativada. Monitor multimídia pronto para projeção.</div>
+                </div>
+                <form id="command-form" class="input-area">
+                    <input type="text" id="ordem" placeholder="Dite a estratégia..." autocomplete="off">
+                    <button type="submit" class="btn-executar">EXECUTAR</button>
+                </form>
+            </main>
+        </div>
+
+        <script>
+            const form = document.getElementById('command-form');
+            const chat = document.getElementById('chat');
+            const mediaContainer = document.getElementById('media-container');
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                const ordem = document.getElementById('ordem').value;
+                if(!ordem) return;
+                chat.innerHTML += `<div class="mestre">👤 Mestre: ${ordem}</div>`;
+                document.getElementById('ordem').value = '';
+                chat.scrollTop = chat.scrollHeight;
+                const formData = new FormData();
+                formData.append('ordem', ordem);
+                try {
+                    const response = await fetch('/executar', { method: 'POST', body: formData });
+                    const data = await response.json();
+                    
+                    chat.innerHTML += `<div class="nexo">🔱 NEXO: ${data.nexo}</div>`;
+                    
+                    // LÓGICA DE PROJEÇÃO INTELIGENTE
+                    const url = data.media_url || (data.parametros && data.parametros.url);
+                    if (url) {
+                        if (url.includes('youtube.com') || url.includes('embed')) {
+                            mediaContainer.innerHTML = `<iframe width="100%" height="100%" src="${url}" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                        } else {
+                            mediaContainer.innerHTML = `<img id="media-render" src="${url}" style="width:100%; height:100%; object-fit: cover;">`;
+                        }
+                    }
+                    if (data.lucro_acumulado !== undefined) {
+                        document.getElementById('lucro-display').innerText = `$${data.lucro_acumulado.toFixed(2)}`;
+                    }
+                    chat.scrollTop = chat.scrollHeight;
+                } catch (err) {
+                    chat.innerHTML += `<div class="nexo" style="color: red;">❌ FALHA NA SINAPSE: ${err}</div>`;
+                }
+            };
+        </script>
+    </body>
+    </html>
+    """
+
+@app.post("/executar")
+async def executar(ordem: str = Form(...), file: Optional[UploadFile] = File(None)):
+    contexto_arquivo = ""
+    if file:
+        contexto_arquivo = await nexo.processar_arquivo(file)
+    
+    # Verificar se a ordem inclui consulta à internet
+    if "consulte" in ordem.lower() or "pesquise" in ordem.lower() or "busque" in ordem.lower():
+        # Extrair query simples (assumindo que a ordem é "consulte X" ou similar)
+        query = ordem.replace("consulte", "").replace("pesquise", "").replace("busque", "").strip()
+        if query:
+            busca_result = await nexo.consultar_internet(query)
+            contexto_arquivo += f" | {busca_result}"
+    
+    decisao = await nexo.pensar_dialetica(ordem, contexto_arquivo)
+    
+    # Auto-Evolução: Instalação física
+    if decisao.get("codigo_auto_evolutivo"):
+        nome = decisao.get("nome_habilidade", f"hab_{datetime.now().strftime('%H%M%S')}")
+        path = HABILIDADES_DIR / f"{nome}.py"
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(decisao["codigo_auto_evolutivo"])
+        decisao["resultado"] += f" | 🧬 HABILIDADE '{nome}' ESTABILIZADA."
+
+    # Memória
+    if supabase:
+        supabase.table("memoria_nexo").insert({
+            "ordem": ordem,
+            "resposta": decisao.get("resultado"),
+            "pensamento": decisao.get("pensamento_final")
+        }).execute()
+
+    return JSONResponse(content={
+        "nexo": decisao.get("resultado", "Decisão processada."),
+        "media_url": None,  # Placeholder for future media integration
+        "parametros": {},
+        "lucro_acumulado": 0.0  # Placeholder for financial tracking
     })
-
-@app.route('/api/agents', methods=['GET'])
-def get_agents():
-    """Retorna informações sobre todos os agentes."""
-    agents_info = {}
-    for nome, agente in gerenciador.agentes.items():
-        agents_info[nome] = {
-            "nome": agente.nome,
-            "funcao": agente.funcao,
-            "tarefas": agente.tarefas,
-            "mensagens": agente.mensagens,
-            "ativo": hasattr(agente, 'ativo') and agente.ativo if hasattr(agente, 'ativo') else False
-        }
-    
-    return jsonify(agents_info)
-
-@app.route('/api/agents/<agent_name>/activate', methods=['POST'])
-def activate_agent(agent_name):
-    """Ativa um agente específico."""
-    agente = gerenciador.obter_agente(agent_name)
-    
-    if not agente:
-        return jsonify({"error": "Agente não encontrado"}), 404
-    
-    # Marcar como ativo (adicionar propriedade se não existir)
-    agente.ativo = True
-    
-    # Salvar estado
-    gerenciador.salvar_estado()
-    
-    return jsonify({
-        "message": f"Agente {agent_name} ativado com sucesso",
-        "agent": {
-            "nome": agente.nome,
-            "funcao": agente.funcao,
-            "ativo": True
-        }
-    })
-
-@app.route('/api/agents/<agent_name>/tasks', methods=['POST'])
-def add_task_to_agent(agent_name):
-    """Adiciona uma tarefa a um agente específico."""
-    data = request.get_json()
-    
-    if not data or 'task' not in data:
-        return jsonify({"error": "Tarefa não especificada"}), 400
-    
-    agente = gerenciador.obter_agente(agent_name)
-    
-    if not agente:
-        return jsonify({"error": "Agente não encontrado"}), 404
-    
-    task = data['task']
-    agente.adicionar_tarefa(task)
-    
-    # Salvar estado
-    gerenciador.salvar_estado()
-    
-    return jsonify({
-        "message": f"Tarefa adicionada ao agente {agent_name}",
-        "task": task,
-        "agent_tasks": agente.tarefas
-    })
-
-@app.route('/api/agents/<agent_name>/execute', methods=['POST'])
-def execute_agent_tasks(agent_name):
-    """Executa as tarefas de um agente."""
-    agente = gerenciador.obter_agente(agent_name)
-    
-    if not agente:
-        return jsonify({"error": "Agente não encontrado"}), 404
-    
-    if not agente.tarefas:
-        return jsonify({
-            "message": f"Nenhuma tarefa pendente para {agent_name}",
-            "tasks_executed": []
-        })
-    
-    # Executar tarefas
-    tasks_executed = agente.tarefas.copy()
-    agente.executar_tarefa()
-    
-    # Salvar estado
-    gerenciador.salvar_estado()
-    
-    return jsonify({
-        "message": f"Tarefas executadas pelo agente {agent_name}",
-        "tasks_executed": tasks_executed,
-        "remaining_tasks": agente.tarefas
-    })
-
-@app.route('/api/ceo/delegate', methods=['POST'])
-def delegate_task():
-    """CEO Nexus delega uma tarefa para um agente subordinado."""
-    data = request.get_json()
-    
-    if not data or 'task' not in data or 'target_agent' not in data:
-        return jsonify({"error": "Tarefa ou agente alvo não especificado"}), 400
-    
-    ceo = gerenciador.obter_agente("CEO Barbosa Nexus")
-    target_agent = gerenciador.obter_agente(data['target_agent'])
-    
-    if not ceo:
-        return jsonify({"error": "CEO Nexus não encontrado"}), 404
-    
-    if not target_agent:
-        return jsonify({"error": "Agente alvo não encontrado"}), 404
-    
-    task = data['task']
-    ceo.delegar_tarefa(task, target_agent)
-    
-    # Salvar estado
-    gerenciador.salvar_estado()
-    
-    return jsonify({
-        "message": f"CEO Nexus delegou '{task}' para {target_agent.nome}",
-        "task": task,
-        "target_agent": target_agent.nome,
-        "target_agent_tasks": target_agent.tarefas
-    })
-
-@app.route('/api/messages', methods=['GET'])
-def get_all_messages():
-    """Retorna todas as mensagens de todos os agentes."""
-    all_messages = []
-    
-    for nome, agente in gerenciador.agentes.items():
-        for msg in agente.mensagens:
-            all_messages.append({
-                "timestamp": datetime.datetime.now().isoformat(),
-                "agent": nome,
-                "sender": msg['remetente'],
-                "message": msg['mensagem']
-            })
-    
-    # Ordenar por timestamp (mais recentes primeiro)
-    all_messages.sort(key=lambda x: x['timestamp'], reverse=True)
-    
-    return jsonify(all_messages)
-
-@app.route('/api/agents/<agent_name>/messages', methods=['GET'])
-def get_agent_messages(agent_name):
-    """Retorna as mensagens de um agente específico."""
-    agente = gerenciador.obter_agente(agent_name)
-    
-    if not agente:
-        return jsonify({"error": "Agente não encontrado"}), 404
-    
-    return jsonify({
-        "agent": agent_name,
-        "messages": agente.mensagens
-    })
-
-@app.route('/api/agents/<sender_name>/send-message', methods=['POST'])
-def send_message(sender_name):
-    """Envia uma mensagem de um agente para outro."""
-    data = request.get_json()
-    
-    if not data or 'recipient' not in data or 'message' not in data:
-        return jsonify({"error": "Destinatário ou mensagem não especificado"}), 400
-    
-    sender = gerenciador.obter_agente(sender_name)
-    recipient = gerenciador.obter_agente(data['recipient'])
-    
-    if not sender:
-        return jsonify({"error": "Agente remetente não encontrado"}), 404
-    
-    if not recipient:
-        return jsonify({"error": "Agente destinatário não encontrado"}), 404
-    
-    message = data['message']
-    sender.enviar_mensagem(recipient, message)
-    
-    # Salvar estado
-    gerenciador.salvar_estado()
-    
-    return jsonify({
-        "message": "Mensagem enviada com sucesso",
-        "sender": sender_name,
-        "recipient": data['recipient'],
-        "content": message
-    })
-
-@app.route('/api/system/status', methods=['GET'])
-def get_system_status():
-    """Retorna o status geral do sistema."""
-    total_agents = len(gerenciador.agentes)
-    active_agents = sum(1 for agente in gerenciador.agentes.values() 
-                       if hasattr(agente, 'ativo') and agente.ativo)
-    total_tasks = sum(len(agente.tarefas) for agente in gerenciador.agentes.values())
-    total_messages = sum(len(agente.mensagens) for agente in gerenciador.agentes.values())
-    
-    return jsonify({
-        "system_status": "online",
-        "total_agents": total_agents,
-        "active_agents": active_agents,
-        "total_pending_tasks": total_tasks,
-        "total_messages": total_messages,
-        "timestamp": datetime.datetime.now().isoformat()
-    })
-
-@app.route('/api/system/reset', methods=['POST'])
-def reset_system():
-    """Reseta o sistema, limpando todas as tarefas e mensagens."""
-    for agente in gerenciador.agentes.values():
-        agente.tarefas = []
-        agente.mensagens = []
-        if hasattr(agente, 'ativo'):
-            agente.ativo = False
-    
-    gerenciador.salvar_estado()
-    
-    return jsonify({
-        "message": "Sistema resetado com sucesso",
-        "timestamp": datetime.datetime.now().isoformat()
-    })
-
-@app.route('/api/simulate/full-workflow', methods=['POST'])
-def simulate_full_workflow():
-    """Simula um fluxo completo de trabalho do sistema."""
-    ceo = gerenciador.obter_agente("CEO Barbosa Nexus")
-    
-    if not ceo:
-        return jsonify({"error": "CEO Nexus não encontrado"}), 404
-    
-    # Ativar CEO
-    ceo.ativo = True
-    
-    # Tarefas padrão para delegação
-    default_tasks = [
-        {"agent": "Agente de Desenvolvimento", "task": "Desenvolver módulo de autenticação"},
-        {"agent": "Agente de Design Visual", "task": "Criar ícones para o painel de controle"},
-        {"agent": "Agente de Análise de Dados", "task": "Analisar dados de engajamento de usuários"}
-    ]
-    
-    results = []
-    
-    for task_info in default_tasks:
-        target_agent = gerenciador.obter_agente(task_info["agent"])
-        if target_agent:
-            # Ativar agente
-            target_agent.ativo = True
-            # Delegar tarefa
-            ceo.delegar_tarefa(task_info["task"], target_agent)
-            results.append({
-                "action": "task_delegated",
-                "task": task_info["task"],
-                "agent": task_info["agent"]
-            })
-    
-    # Salvar estado
-    gerenciador.salvar_estado()
-    
-    return jsonify({
-        "message": "Fluxo completo simulado com sucesso",
-        "actions": results,
-        "timestamp": datetime.datetime.now().isoformat()
-    })
-
-if __name__ == '__main__':
-    print("Iniciando EcoGuardians API...")
-    print("Acesse http://localhost:5000 para verificar se a API está funcionando")
-    app.run(host='0.0.0.0', port=5000, debug=True)
-
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=7860)
