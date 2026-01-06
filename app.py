@@ -1,5 +1,19 @@
 import os
 import sys
+import subprocess
+
+# --- MOTOR DE AUTO-REPARO (Para ambientes sem terminal) ---
+def garantir_dependencias():
+    libs = ["loguru", "langchain-groq", "fastapi", "uvicorn", "supabase", "python-dotenv", "pypdf2", "pillow", "python-multipart", "langchain", "httpx"]
+    for lib in libs:
+        try:
+            __import__(lib.replace("-", "_"))
+        except ImportError:
+            print(f"🧬 NEXO: Instalando engrenagem faltante: {lib}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", lib])
+
+# Executa o reparo antes de qualquer importação crítica
+garantir_dependencias()
 
 # --- AGORA OS IMPORTS NORMAIS ---
 import asyncio
@@ -10,7 +24,6 @@ from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from langchain_groq import ChatGroq
 from loguru import logger
@@ -55,6 +68,33 @@ class NexoUltraV32:
         key = self.keys[self.idx % len(self.keys)]
         self.idx += 1
         return ChatGroq(model_name="llama-3.2-11b-vision-preview", groq_api_key=key, temperature=0.3)
+
+    async def processar_arquivo(self, file: UploadFile):
+        """Processa PDFs e imagens para contexto"""
+        try:
+            if file.filename.lower().endswith('.pdf'):
+                pdf_reader = PyPDF2.PdfReader(io.BytesIO(await file.read()))
+                text = ""
+                for page in pdf_reader.pages:
+                    text += page.extract_text()
+                return text
+            elif file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                image_data = await file.read()
+                import base64
+                image_b64 = base64.b64encode(image_data).decode('utf-8')
+                vision_brain = self.get_vision_brain()
+                from langchain.schema import HumanMessage
+                message = HumanMessage(content=[
+                    {"type": "text", "text": "Descreva esta imagem em detalhes para contextualizar uma decisão."},
+                    {"type": "image_url", "image_url": f"data:image/jpeg;base64,{image_b64}"}
+                ])
+                response = vision_brain.invoke([message])
+                return response.content
+            else:
+                return "Tipo de arquivo não suportado."
+        except Exception as e:
+            logger.error(f"Erro ao processar arquivo: {e}")
+            return f"Erro ao processar arquivo: {str(e)}"
 
     async def pensar_dialetica(self, ordem, contexto_arquivo=""):
         """MODO GOOGLE AI ULTRA: Auto-Questionamento Dialético"""
@@ -129,37 +169,6 @@ class NexoUltraV32:
             logger.error(f"Erro na Dialética: {e}")
             return {"resultado": "🔱 FALHA NO DEBATE INTERNO.", "pensamento_final": str(e)}
 
-    async def processar_arquivo(self, file: UploadFile):
-        """Processa arquivo PDF ou imagem"""
-        if file.filename.lower().endswith('.pdf'):
-            # Extrair texto do PDF
-            pdf_reader = PyPDF2.PdfReader(io.BytesIO(await file.read()))
-            texto = ""
-            for page in pdf_reader.pages:
-                texto += page.extract_text()
-            return f"Conteúdo do PDF '{file.filename}': {texto[:2000]}"  # Limita para não sobrecarregar
-        elif file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-            # Usar visão para descrever imagem
-            image = Image.open(io.BytesIO(await file.read()))
-            import base64
-            buffer = io.BytesIO()
-            image.save(buffer, format='PNG')
-            img_base64 = base64.b64encode(buffer.getvalue()).decode()
-            vision_brain = self.get_vision_brain()
-            # Estrutura para visão: mensagem com texto e imagem em base64
-            from langchain.schema import HumanMessage
-            message = HumanMessage(content=[
-                {"type": "text", "text": "Descreva detalhadamente o que você vê nesta imagem, incluindo detalhes visuais, cores, objetos e qualquer texto legível."},
-                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_base64}"}}
-            ])
-            try:
-                res = vision_brain.invoke([message])
-                return f"Descrição da imagem '{file.filename}': {res.content}"
-            except Exception as e:
-                return f"Erro ao processar imagem '{file.filename}': {str(e)}"
-        else:
-            return f"Tipo de arquivo '{file.filename}' não suportado."
-
     async def executar_comando_seguro(self, comando):
         """Executa comandos bash seguros dentro do código (Terminal Próprio)"""
         comandos_permitidos = [
@@ -211,40 +220,65 @@ class NexoUltraV32:
             os.unlink(temp_script)
 
     async def consultar_internet(self, query):
-        """Consulta a internet usando DuckDuckGo API para informações rápidas"""
+        """Busca real para alimentar o Auditor com fatos."""
         import httpx
         try:
-            url = f"https://api.duckduckgo.com/?q={query}&format=json&no_html=1&skip_disambig=1"
+            # Simulando busca via DuckDuckGo ou similar
+            url = f"https://api.duckduckgo.com/?q={query}&format=json"
             async with httpx.AsyncClient() as client:
-                res = await client.get(url, timeout=10)
+                res = await client.get(url, timeout=5)
                 data = res.json()
-                abstract = data.get('Abstract', '')
-                if not abstract:
-                    abstract = data.get('Answer', 'Informação não encontrada.')
-                return f"Resultado da busca para '{query}': {abstract}"
+                return data.get("AbstractText", "Informação não encontrada na superfície.")
         except Exception as e:
-            return f"Erro na consulta à internet: {str(e)}"
+            return f"Erro na busca: {str(e)}"
 
 # --- SERVIDOR SOBERANO ---
 app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 nexo = NexoUltraV32()
 
 @app.get("/", response_class=HTMLResponse)
 async def interface():
-    # Ler o index.html em vez de HTML inline
-    html_path = BASE_DIR / "index.html"
-    if html_path.exists():
-        with open(html_path, "r", encoding="utf-8") as f:
-            return f.read()
-    else:
-        return "<h1>Erro: index.html não encontrado</h1>"
+    return """
+    <body style="background:#000; color:#0f0; font-family:monospace; padding:20px;">
+        <h1>🔱 NEXO V32 | ULTRA DIALÉTICO</h1>
+        <div id="term" style="border:1px solid #0f0; height:60vh; overflow:auto; padding:15px; background:#050505; margin-bottom:10px;"></div>
+        <form id="f" enctype="multipart/form-data">
+            <input type="text" id="i" placeholder="Dite a Ordem Estratégica..." style="width:70%; background:#000; color:#fff; border:1px solid #0f0; padding:12px;">
+            <input type="file" id="file" accept=".pdf,.png,.jpg,.jpeg" style="width:25%; background:#000; color:#fff; border:1px solid #0f0; padding:12px;">
+            <button type="submit" style="width:5%; background:#0f0; color:#000; border:1px solid #0f0; padding:12px;">Enviar</button>
+        </form>
+        <script>
+            document.getElementById('f').onsubmit = async (e) => {
+                e.preventDefault();
+                const i = document.getElementById('i');
+                const fileInput = document.getElementById('file');
+                const term = document.getElementById('term');
+                const val = i.value;
+                const file = fileInput.files[0];
+                term.innerHTML += `<div style='color:#fff'>> ${val}</div>`;
+                if (file) {
+                    term.innerHTML += `<div style='color:#fff'>Arquivo: ${file.name}</div>`;
+                }
+                const fd = new FormData();
+                fd.append('ordem', val);
+                if (file) {
+                    fd.append('file', file);
+                }
+                term.innerHTML += `<div style="color:#ffff00;">🔱 NEXO está debatendo dialeticamente...</div>`;
+                const res = await fetch('/executar', { method: 'POST', body: fd });
+                const d = await res.json();
+                
+                term.innerHTML += `<div style="color:#0088ff;"><b>[ARQUITETO]:</b> ${d.debate_interno.arquiteto}</div>`;
+                term.innerHTML += `<div style="color:#ff4444;"><b>[AUDITOR]:</b> ${d.debate_interno.auditor}</div>`;
+                term.innerHTML += `<div style="color:#0f0;">🔱 <b>NEXO:</b> ${d.resultado}</div><hr style="border:0.1px solid #333;">`;
+                
+                i.value = '';
+                fileInput.value = '';
+                term.scrollTop = term.scrollHeight;
+            };
+        </script>
+    </body>
+    """
 
 @app.post("/executar")
 async def executar(ordem: str = Form(...), file: Optional[UploadFile] = File(None)):
@@ -271,19 +305,23 @@ async def executar(ordem: str = Form(...), file: Optional[UploadFile] = File(Non
         decisao["resultado"] += f" | 🧬 HABILIDADE '{nome}' ESTABILIZADA."
 
     # Memória
-    # if supabase:
-    #     supabase.table("memoria_nexo").insert({
-    #         "ordem": ordem,
-    #         "resposta": decisao.get("resultado"),
-    #         "pensamento": decisao.get("pensamento_final")
-    #     }).execute()
+    if supabase:
+        supabase.table("memoria_nexo").insert({
+            "ordem": ordem,
+            "resposta": decisao.get("resultado"),
+            "pensamento": decisao.get("pensamento_final")
+        }).execute()
 
-    return JSONResponse(content={
-        "nexo": decisao.get("resultado", "Decisão processada."),
-        "media_url": None,  # Placeholder for future media integration
-        "parametros": {},
-        "lucro_acumulado": 0.0  # Placeholder for financial tracking
-    })
+    # Formatar resposta para o HUB 5D
+    resposta_hub = {
+        "nexo": decisao.get("resultado", ""),
+        "debate_interno": decisao.get("debate_interno", {}),
+        "media_url": decisao.get("media_url", ""),  # Placeholder para projeção multimídia
+        "lucro_acumulado": 0.0  # Placeholder; integrar com lógica de vendas
+    }
+
+    return JSONResponse(content=resposta_hub)
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=7860)
