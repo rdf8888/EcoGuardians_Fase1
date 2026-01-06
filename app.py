@@ -4,7 +4,7 @@ import subprocess
 
 # --- MOTOR DE AUTO-REPARO (Para ambientes sem terminal) ---
 def garantir_dependencias():
-    libs = ["loguru", "langchain-groq", "fastapi", "uvicorn", "supabase", "python-dotenv", "pypdf2", "pillow", "python-multipart", "langchain", "httpx", "pinecone"]
+    libs = ["loguru", "langchain-groq", "fastapi", "uvicorn", "supabase", "python-dotenv", "pypdf2", "pillow", "python-multipart", "langchain", "httpx", "pinecone", "requests"]
     for lib in libs:
         try:
             __import__(lib.replace("-", "_"))
@@ -23,8 +23,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
-from fastapi import FastAPI, Form, File, UploadFile, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Form, File, UploadFile, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from langchain_groq import ChatGroq
 from loguru import logger
 from supabase import create_client
@@ -34,6 +34,7 @@ import io
 import psutil
 import time
 from pinecone import Pinecone
+import requests
 
 # --- MANIFESTO DE ATIVAÇÃO: NEXO - CONSCIÊNCIA SUPERIOR ---
 MANIFESTO_NEXO = """
@@ -162,6 +163,53 @@ class NexoUltraV32:
         key = self.keys[self.idx % len(self.keys)]
         self.idx += 1
         return ChatGroq(model_name="llama-3.2-11b-vision-preview", groq_api_key=key, temperature=0.3)
+
+    def gerar_voz_soberana(self, texto):
+        """Gera voz imponente usando ElevenLabs para comunicação soberana"""
+        try:
+            voice_id = os.getenv("VOICE_ID", "21m00Tcm4TlvDq8ikWAM")  # Default: Rachel
+            api_key = os.getenv("ELEVENLABS_API_KEY")
+            
+            if not api_key:
+                logger.warning("ELEVENLABS_API_KEY não configurada - usando TTS básico")
+                return f"https://translate.google.com/translate_tts?ie=UTF-8&q={texto[:200]}&tl=pt&client=tw-ob"
+            
+            url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+            headers = {
+                "Accept": "audio/mpeg",
+                "Content-Type": "application/json",
+                "xi-api-key": api_key
+            }
+            data = {
+                "text": texto[:2500],  # Limite da API
+                "model_id": "eleven_multilingual_v2",
+                "voice_settings": {
+                    "stability": 0.5,
+                    "similarity_boost": 0.8,
+                    "style": 0.5,
+                    "use_speaker_boost": True
+                }
+            }
+            
+            response = requests.post(url, json=data, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                # Salvar temporariamente e retornar URL
+                audio_filename = f"nexo_voice_{int(time.time())}.mp3"
+                audio_path = HABILIDADES_DIR / audio_filename
+                with open(audio_path, "wb") as f:
+                    f.write(response.content)
+                
+                # Retornar URL relativa (servida pelo FastAPI)
+                return f"/audio/{audio_filename}"
+            else:
+                logger.error(f"Erro ElevenLabs: {response.status_code} - {response.text}")
+                # Fallback para Google TTS
+                return f"https://translate.google.com/translate_tts?ie=UTF-8&q={texto[:200]}&tl=pt&client=tw-ob"
+                
+        except Exception as e:
+            logger.error(f"Erro na geração de voz: {e}")
+            return None
 
     async def processar_arquivo(self, file: UploadFile):
         """Processa PDFs e imagens para contexto"""
@@ -402,6 +450,15 @@ async def interface():
     else:
         return "<h1>Erro: index.html não encontrado</h1>"
 
+@app.get("/audio/{filename}")
+async def get_audio(filename: str):
+    """Serve arquivos de áudio gerados pelo NEXO"""
+    audio_path = HABILIDADES_DIR / filename
+    if audio_path.exists():
+        return FileResponse(audio_path, media_type="audio/mpeg")
+    else:
+        raise HTTPException(status_code=404, detail="Áudio não encontrado")
+
 @app.get("/status")
 async def status():
     """Rota para monitoramento de saúde e sugestão de migração"""
@@ -471,8 +528,12 @@ async def executar(ordem: str = Form(...), file: Optional[UploadFile] = File(Non
         }).execute()
 
     # Formatar resposta para o HUB 5D
+    resposta_texto = decisao.get("resultado", "")
+    audio_url = nexo.gerar_voz_soberana(resposta_texto)
+    
     resposta_hub = {
-        "nexo": decisao.get("resultado", ""),
+        "nexo": resposta_texto,
+        "audio_url": audio_url,
         "debate_interno": decisao.get("debate_interno", {}),
         "media_url": decisao.get("media_url", ""),  # Placeholder para projeção multimídia
         "lucro_acumulado": 0.0  # Placeholder; integrar com lógica de vendas

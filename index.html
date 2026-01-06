@@ -90,11 +90,21 @@
                 if(data.lucro_acumulado !== undefined) {
                     document.getElementById('lucro').innerText = '$' + data.lucro_acumulado.toFixed(2);
                 }
+
+                // Reproduzir voz do NEXO se disponível
+                if(data.audio_url) {
+                    const audio = document.getElementById('nexo-voice');
+                    audio.src = data.audio_url;
+                    audio.play().catch(e => console.log("Aguardando interação do Mestre para falar."));
+                }
             } catch (err) {
                 chat.innerHTML += `<div class="nexo" style="color: #ff4b2b;">❌ ERRO DE CONEXÃO: Verifique se o Agente está rodando na porta 7860.</div>`;
             }
             chat.scrollTop = chat.scrollHeight;
         };
     </script>
+
+    <!-- Elemento de áudio invisível para voz do NEXO -->
+    <audio id="nexo-voice" style="display:none;"></audio>
 </body>
 </html>

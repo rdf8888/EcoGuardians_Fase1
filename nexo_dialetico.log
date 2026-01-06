@@ -36,3 +36,9 @@ Reason: Unauthorized
 HTTP response headers: HTTPHeaderDict({'x-pinecone-api-version': '2025-10', 'x-cloud-trace-context': '5b49170589cd9e80ae82cf72bd489e05', 'date': 'Tue, 06 Jan 2026 19:41:09 GMT', 'content-type': 'text/html', 'server': 'Google Frontend', 'Content-Length': '15', 'Via': '1.1 google', 'Alt-Svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'})
 HTTP response body: Invalid API Key
 
+2026-01-06 19:51:20.198 | SUCCESS  | app:<module>:129 - 🔗 MEMÓRIA SOBERANA: Ativa.
+2026-01-06 19:51:20.396 | ERROR    | app:__init__:149 - ⚠️ MEMÓRIA VETORIAL: Falha - (401)
+Reason: Unauthorized
+HTTP response headers: HTTPHeaderDict({'x-pinecone-api-version': '2025-10', 'x-cloud-trace-context': 'a8780654eb8c480e706560d6adc78a97', 'date': 'Tue, 06 Jan 2026 19:51:20 GMT', 'content-type': 'text/html', 'server': 'Google Frontend', 'Content-Length': '15', 'Via': '1.1 google', 'Alt-Svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000'})
+HTTP response body: Invalid API Key
+
